@@ -1,0 +1,20 @@
+@use './variables' as *;
+
+/*
+The website is using "Mobile first" approach
+So, you must define styles in this order:
+  Firstly for phone,
+  Next for tablet or/and desktop with using tablet(), desktop() accordingly
+*/
+
+@mixin tablet() {
+  @media (min-width: $tablet-breakpoint) {
+    @content;
+  }
+};
+
+@mixin desktop() {
+  @media (min-width: $desktop-breakpoint) {
+    @content;
+  }
+};
