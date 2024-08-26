@@ -1,3 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import VHeader from '@/components/VHeader.vue';
+</script>
 
-<template>App</template>
+<template>
+  <VHeader />
+</template>
