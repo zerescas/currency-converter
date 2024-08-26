@@ -16,6 +16,7 @@
     "stylelint-fix": "stylelint \"./src/**/*.{css,scss,sass,vue}\" --fix"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.0.20",
     "vue": "^3.4.29"
   },
   "devDependencies": {
