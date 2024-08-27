@@ -16,7 +16,9 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
         scss: {
-            additionalData: `@import "@/assets/scss/global.scss";`,
+          additionalData: `
+            @use '@/assets/scss/vite-global' as *;
+          `,
         },
     },
   },

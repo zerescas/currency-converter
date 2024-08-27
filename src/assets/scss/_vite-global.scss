@@ -1,0 +1,3 @@
+/* Pass compile time variables, mixins, etc in every Vue component through "vite.config.ts" */
+@forward '@/assets/scss/variables';
+@forward '@/assets/scss/helpers/media-queries';

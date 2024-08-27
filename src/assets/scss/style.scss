@@ -1,3 +1,6 @@
+/* Import ready to use selectors to use within Vue components */
+@use './elements/link' as *;
+
 * {
   margin: 0;
 }
