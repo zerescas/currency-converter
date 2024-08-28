@@ -1,12 +1,36 @@
 /* Import ready to use selectors to use within Vue components */
 @use './elements/link' as *;
+@use './elements/vinput' as *;
+@use './elements/vinput-group' as *;
+
+:root {
+  --theme-color-accent: #7cb0ff;
+  --theme-input-color: #a0a0a0;
+  --theme-focus-input-color: #fff;
+  --vinput-label-margin-bottom: 8px;
+  --vinput-group-gap: 28px; 
+}
 
 * {
+  box-sizing: border-box;
   margin: 0;
+}
+
+html {
+  height: 0;
+  min-height: 100%;
 }
 
 body {
   background-color: #222;
   color: #E7E7E7;
   font-family: 'Inter Variable', sans-serif;
+  font-weight: 300;
+  height: 100%;;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }

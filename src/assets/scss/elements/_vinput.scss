@@ -1,0 +1,26 @@
+.vinput {
+  display: flex;
+  flex-direction: column;
+
+  &__label {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: var(--vinput-label-margin-bottom);
+  }
+
+  &__input {
+    background-color: #181818;
+    border: 1px solid var(--theme-input-color);
+    border-radius: 8px;
+    color: var(--theme-input-color);
+    font-size: 16px;
+    outline: none;
+    padding: 12px 16px;
+    transition: color 0.25s ease, border-color 0.25s ease;
+
+    &:focus {
+      border-color: var(--theme-focus-input-color);
+      color: var(--theme-focus-input-color);
+    }
+  }
+}
