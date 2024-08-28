@@ -1,35 +1,105 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import SwapIcon from './icons/SwapIcon.vue';
 import VInput from './VInput.vue';
 import VSelect, { type IOption } from './VSelect.vue';
+import { useCurrencyExchangeAPI } from '@/composables/useCurrencyExchangeAPI';
 
-const options: IOption[] = [{ value: 'USD' }, { value: 'RUB' }];
+const { getCurrencies, getCurrencyByLanguage, getExchangeRate, allowedCurrencies } =
+  useCurrencyExchangeAPI();
 
-const selectedFromCurrency = ref(options[0].value);
-const selectedToCurrency = ref(options[1].value);
+const currenciesOptions = ref<IOption[]>([]);
+
+const amount = ref(1);
+const exchangeRate = ref();
+const selectedFromCurrency = ref();
+const selectedToCurrency = ref();
+
+watch(
+  [selectedFromCurrency, selectedToCurrency],
+  async ([newSelectedFromCurrency, newSelectedToCurrency]) => {
+    exchangeRate.value = await getExchangeRate(newSelectedFromCurrency, newSelectedToCurrency);
+  },
+);
+
+const resultFromCurrency = computed(() => {
+  if (!selectedFromCurrency.value) return '';
+
+  return `${formatNumber(amount.value, selectedFromCurrency.value)} ${selectedFromCurrency.value}`;
+});
+
+const resultToCurrency = computed(() => {
+  if (!exchangeRate.value || !selectedToCurrency.value) return '';
+
+  return `${formatNumber(amount.value * exchangeRate.value ?? 1, selectedToCurrency.value)} ${selectedToCurrency.value}`;
+});
+
+onMounted(async () => {
+  // Fill "currenciesOptions" with API response
+  const currenciesList = await getCurrencies();
+  for (const currencyCode in currenciesList) {
+    currenciesOptions.value.push({
+      value: currencyCode.toUpperCase(),
+      text: `${currencyCode.toUpperCase()} - ${currenciesList[currencyCode]}`,
+    });
+  }
+
+  // Set "selectedFromCurrency" based on user's language
+  // Set "selectedToCurrency" default value
+  let userCurrencyCode = (await getCurrencyByLanguage(navigator.language))?.currency_code ?? '';
+  if (!allowedCurrencies.includes(userCurrencyCode)) {
+    userCurrencyCode = 'USD';
+  }
+
+  selectedFromCurrency.value = userCurrencyCode.toUpperCase();
+  selectedToCurrency.value = 'USD';
+});
+
+function swapCurrencies() {
+  [selectedFromCurrency.value, selectedToCurrency.value] = [
+    selectedToCurrency.value,
+    selectedFromCurrency.value,
+  ];
+}
+
+function formatNumber(amount: number, currencyCode: string) {
+  return Intl.NumberFormat(navigator.language, {
+    style: 'currency',
+    currency: currencyCode,
+    currencyDisplay: 'narrowSymbol',
+  }).format(amount ?? 0);
+}
 </script>
 
 <template>
   <div class="currency-converter">
     <div class="input-group currency-converter__inputs">
-      <VInput label="Amount" input-id="money-amount" />
+      <VInput v-model="amount" label="Amount" input-id="money-amount" input-type="number" />
 
-      <VSelect v-model="selectedFromCurrency" :options label="From" select-id="from-currency" />
+      <VSelect
+        v-model="selectedFromCurrency"
+        :options="currenciesOptions"
+        label="From"
+        select-id="from-currency"
+      />
 
       <div class="currency-converter__to-currency">
-        <button class="currency-converter__swap-currencies">
+        <button class="currency-converter__swap-currencies" @click="swapCurrencies">
           <SwapIcon class="currency-converter__swap-currencies-icon" />
         </button>
 
-        <VSelect v-model="selectedToCurrency" :options label="To" select-id="to-currency" />
+        <VSelect
+          v-model="selectedToCurrency"
+          :options="currenciesOptions"
+          label="To"
+          select-id="to-currency"
+        />
       </div>
     </div>
 
     <div class="currency-converter__result">
-      <span style="font-size: 20px">24,000 RUB</span> <br />
-      <span style="font-size: 20px">= </span>
-      <span style="font-size: 32px; font-weight: 600">240 USD</span>
+      <div class="currency-converter__result-from">{{ resultFromCurrency }}</div>
+      <div class="currency-converter__result-to">{{ resultToCurrency }}</div>
     </div>
   </div>
 </template>
@@ -66,6 +136,35 @@ const selectedToCurrency = ref(options[1].value);
   &__swap-currencies-icon {
     height: 100%;
     width: 100%;
+  }
+
+  // Result
+  &__result {
+    overflow: auto;
+    padding-bottom: 4px;
+    padding-left: 20px;
+    padding-top: 4px;
+    position: relative;
+    text-wrap: nowrap;
+
+    &::before {
+      background-color: var(--theme-color-accent);
+      bottom: 0;
+      content: '';
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 1px;
+    }
+  }
+
+  &__result-from {
+    font-size: 18px;
+  }
+
+  &__result-to {
+    font-size: 32px;
+    font-weight: 600;
   }
 }
 </style>
