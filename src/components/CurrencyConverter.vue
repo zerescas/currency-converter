@@ -106,6 +106,11 @@ function formatNumber(amount: number, currencyCode: string) {
 
 <style scoped lang="scss">
 .currency-converter {
+  @include desktop {
+    margin: auto;
+    max-width: 600px;
+  }
+
   &__inputs {
     margin-bottom: 60px;
   }
