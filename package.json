@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.20",
+    "axios": "^1.7.5",
     "vue": "^3.4.29"
   },
   "devDependencies": {
