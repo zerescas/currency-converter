@@ -4,6 +4,7 @@ import SelectArrowIcon from './icons/SelectArrowIcon.vue';
 
 export interface IOption {
   value: string;
+  text: string;
 }
 
 const modelValue = defineModel();
@@ -41,7 +42,7 @@ const isOpened = ref(false);
           class="vselect__option"
           :value="option.value"
         >
-          {{ option.value }}
+          {{ option.text }}
         </option>
       </select>
 
