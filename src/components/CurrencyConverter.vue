@@ -73,7 +73,7 @@ function formatNumber(amount: number, currencyCode: string) {
 
 <template>
   <div class="currency-converter">
-    <div class="input-group currency-converter__inputs">
+    <div class="vinput-group currency-converter__inputs">
       <VInput v-model="amount" label="Amount" input-id="money-amount" input-type="number" />
 
       <VSelect
