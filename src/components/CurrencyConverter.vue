@@ -129,9 +129,9 @@ function formatNumber(amount: number, currencyCode: string) {
 
     <div class="currency-converter__result">
       <div class="currency-converter__result-from">
-        {{ formattedResultAmount || '...' }}
+        {{ formattedResultAmount || 'Please wait' }}
       </div>
-      <div class="currency-converter__result-to">{{ formattedResultExchange || '...' }}</div>
+      <div class="currency-converter__result-to">{{ formattedResultExchange || 'Loading' }}</div>
     </div>
   </div>
 </template>
