@@ -37,7 +37,7 @@ body {
   // Decoration by page sides
   &::before,
   &::after {
-    background-image: url('/public/img/decorators/decorator-side.png');
+    background-image: url('/img/decorators/decorator-side.png');
     content: '';
     pointer-events: none;
     position: fixed;
