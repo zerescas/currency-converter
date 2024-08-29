@@ -128,8 +128,10 @@ function formatNumber(amount: number, currencyCode: string) {
     </div>
 
     <div class="currency-converter__result">
-      <div class="currency-converter__result-from">{{ formattedResultAmount }}</div>
-      <div class="currency-converter__result-to">{{ formattedResultExchange }}</div>
+      <div class="currency-converter__result-from">
+        {{ formattedResultAmount || '...' }}
+      </div>
+      <div class="currency-converter__result-to">{{ formattedResultExchange || '...' }}</div>
     </div>
   </div>
 </template>
