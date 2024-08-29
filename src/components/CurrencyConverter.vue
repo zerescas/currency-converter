@@ -7,6 +7,7 @@ import VInput from './VInput.vue';
 import VSelect, { type IOption } from './VSelect.vue';
 
 import { useCurrencyExchangeAPI } from '@/composables/useCurrencyExchangeAPI';
+import ErrorWrapper from './ErrorWrapper.vue';
 
 const { getCurrencies, getCurrencyByLanguage, getExchangeRate, allowedCurrencies } =
   useCurrencyExchangeAPI();
@@ -17,11 +18,39 @@ const exchangeRate = ref();
 const selectedFromCurrency = ref();
 const selectedToCurrency = ref();
 
+// Variables to handle API error through <ErrorWrapper> component
+const isLoading = ref(false);
+const isError = ref(false);
+const errorMessage = ref('');
+const reloadFunc = ref<() => void>();
+
 // Get exchange rate from API on change "From" or "To" currencies
 watch(
   [selectedFromCurrency, selectedToCurrency],
-  async ([newSelectedFromCurrency, newSelectedToCurrency]) => {
-    exchangeRate.value = await getExchangeRate(newSelectedFromCurrency, newSelectedToCurrency);
+  async (
+    [newSelectedFromCurrency, newSelectedToCurrency],
+    [oldSelectedFromCurrency, oldSelectedToCurrency],
+  ) => {
+    try {
+      isLoading.value = true;
+      exchangeRate.value = null;
+
+      exchangeRate.value = await getExchangeRate(newSelectedFromCurrency, newSelectedToCurrency);
+    } catch (error) {
+      isError.value = true;
+      errorMessage.value = 'Cannot get exchange rate';
+
+      selectedFromCurrency.value = oldSelectedFromCurrency;
+      selectedToCurrency.value = oldSelectedToCurrency;
+
+      reloadFunc.value = () => {
+        isError.value = false;
+        selectedFromCurrency.value = newSelectedFromCurrency;
+        selectedToCurrency.value = newSelectedToCurrency;
+      };
+    } finally {
+      isLoading.value = false;
+    }
   },
 );
 
@@ -65,25 +94,43 @@ const formattedResultExchange = computed(() => {
 });
 
 onMounted(async () => {
-  // Fill "currenciesOptions" with API response
-  const currenciesList = await getCurrencies();
-  for (const currencyCode in currenciesList) {
-    currenciesOptions.value.push({
-      value: currencyCode.toUpperCase(),
-      text: `${currencyCode.toUpperCase()} - ${currenciesList[currencyCode]}`,
-    });
-  }
-
-  // Set "selectedFromCurrency" based on user's language
-  // Set "selectedToCurrency" default value
-  let userCurrencyCode = (await getCurrencyByLanguage(navigator.language))?.currency_code ?? '';
-  if (!allowedCurrencies.includes(userCurrencyCode)) {
-    userCurrencyCode = 'USD';
-  }
-
-  selectedFromCurrency.value = userCurrencyCode.toUpperCase();
-  selectedToCurrency.value = 'USD';
+  initComponent();
 });
+
+async function initComponent() {
+  try {
+    isLoading.value = true;
+
+    // Fill "currenciesOptions" with API response
+    const currenciesList = await getCurrencies();
+    for (const currencyCode in currenciesList) {
+      currenciesOptions.value.push({
+        value: currencyCode.toUpperCase(),
+        text: `${currencyCode.toUpperCase()} - ${currenciesList[currencyCode]}`,
+      });
+    }
+
+    // Set "selectedFromCurrency" based on user's language
+    // Set "selectedToCurrency" default value
+    let userCurrencyCode = (await getCurrencyByLanguage(navigator.language))?.currency_code ?? '';
+    if (!allowedCurrencies.includes(userCurrencyCode)) {
+      userCurrencyCode = 'USD';
+    }
+
+    selectedFromCurrency.value = userCurrencyCode.toUpperCase();
+    selectedToCurrency.value = 'USD';
+  } catch (error) {
+    isError.value = true;
+    errorMessage.value = 'Cannot initialize currency converter';
+
+    reloadFunc.value = () => {
+      isError.value = false;
+      setTimeout(() => initComponent(), 300);
+    };
+  } finally {
+    isLoading.value = false;
+  }
+}
 
 function swapCurrencies() {
   [selectedFromCurrency.value, selectedToCurrency.value] = [
@@ -102,38 +149,40 @@ function formatNumber(amount: number, currencyCode: string) {
 </script>
 
 <template>
-  <div class="currency-converter">
-    <div class="vinput-group currency-converter__inputs">
-      <VInput v-model="amount" label="Amount" input-id="money-amount" input-type="number" />
-
-      <VSelect
-        v-model="selectedFromCurrency"
-        :options="currenciesOptions"
-        label="From"
-        select-id="from-currency"
-      />
-
-      <div class="currency-converter__to-currency">
-        <button class="currency-converter__swap-currencies" @click="swapCurrencies">
-          <SwapIcon class="currency-converter__swap-currencies-icon" />
-        </button>
+  <ErrorWrapper :is-enabled="isError" :message="errorMessage" @reload="reloadFunc">
+    <div class="currency-converter" :class="{ 'currency-converter--loading': isLoading }">
+      <div class="vinput-group currency-converter__inputs">
+        <VInput v-model="amount" label="Amount" input-id="money-amount" input-type="number" />
 
         <VSelect
-          v-model="selectedToCurrency"
+          v-model="selectedFromCurrency"
           :options="currenciesOptions"
-          label="To"
-          select-id="to-currency"
+          label="From"
+          select-id="from-currency"
         />
-      </div>
-    </div>
 
-    <div class="currency-converter__result">
-      <div class="currency-converter__result-from">
-        {{ formattedResultAmount || 'Please wait' }}
+        <div class="currency-converter__to-currency">
+          <button class="currency-converter__swap-currencies" @click="swapCurrencies">
+            <SwapIcon class="currency-converter__swap-currencies-icon" />
+          </button>
+
+          <VSelect
+            v-model="selectedToCurrency"
+            :options="currenciesOptions"
+            label="To"
+            select-id="to-currency"
+          />
+        </div>
       </div>
-      <div class="currency-converter__result-to">{{ formattedResultExchange || 'Loading' }}</div>
+
+      <div class="currency-converter__result">
+        <div class="currency-converter__result-from">
+          {{ formattedResultAmount || 'Please wait' }}
+        </div>
+        <div class="currency-converter__result-to">{{ formattedResultExchange || 'Loading' }}</div>
+      </div>
     </div>
-  </div>
+  </ErrorWrapper>
 </template>
 
 <style scoped lang="scss">
@@ -201,6 +250,24 @@ function formatNumber(amount: number, currencyCode: string) {
   &__result-to {
     font-size: 32px;
     font-weight: 600;
+  }
+
+  &--loading {
+    pointer-events: none;
+
+    .currency-converter__result {
+      animation: breath 0.5s alternate-reverse ease infinite;
+    }
+  }
+}
+
+@keyframes breath {
+  0% {
+    opacity: 0.25;
+  }
+
+  100% {
+    opacity: 1;
   }
 }
 </style>
