@@ -26,11 +26,35 @@ body {
   color: #E7E7E7;
   font-family: 'Inter Variable', sans-serif;
   font-weight: 300;
-  height: 100%;;
+  height: 100%;
 }
 
 #app {
   display: flex;
   flex-direction: column;
   height: 100%;
+
+  // Decoration by page sides
+  &::before,
+  &::after {
+    background-image: url('/public/img/decorators/decorator-side.png');
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    width: 100px;
+    z-index: -1;
+  }
+
+  &::before {
+    bottom: 0;
+    left: 4px;
+    top: 0;
+  }
+
+  &::after {
+    bottom: 0;
+    right: 0;
+    top: 0;
+    transform: rotate(180deg);
+  }
 }
