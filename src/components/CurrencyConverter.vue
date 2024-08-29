@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import gsap from 'gsap';
+
 import SwapIcon from './icons/SwapIcon.vue';
 import VInput from './VInput.vue';
 import VSelect, { type IOption } from './VSelect.vue';
+
 import { useCurrencyExchangeAPI } from '@/composables/useCurrencyExchangeAPI';
 
 const { getCurrencies, getCurrencyByLanguage, getExchangeRate, allowedCurrencies } =
@@ -10,11 +13,11 @@ const { getCurrencies, getCurrencyByLanguage, getExchangeRate, allowedCurrencies
 
 const currenciesOptions = ref<IOption[]>([]);
 
-const amount = ref(1);
 const exchangeRate = ref();
 const selectedFromCurrency = ref();
 const selectedToCurrency = ref();
 
+// Get exchange rate from API on change "From" or "To" currencies
 watch(
   [selectedFromCurrency, selectedToCurrency],
   async ([newSelectedFromCurrency, newSelectedToCurrency]) => {
@@ -22,16 +25,43 @@ watch(
   },
 );
 
-const resultFromCurrency = computed(() => {
+// Amount to exchange
+const amount = ref(1);
+const tweenedAmount = ref(0);
+watch(
+  amount,
+  (newAmount) => {
+    gsap.to(tweenedAmount, {
+      value: newAmount,
+      duration: 0.5,
+    });
+  },
+  { immediate: true },
+);
+
+const formattedResultAmount = computed(() => {
   if (!selectedFromCurrency.value) return '';
 
-  return `${formatNumber(amount.value, selectedFromCurrency.value)} ${selectedFromCurrency.value}`;
+  return `${formatNumber(tweenedAmount.value, selectedFromCurrency.value)} ${selectedFromCurrency.value}`;
 });
 
-const resultToCurrency = computed(() => {
+// Exchange result
+const tweenedExchangedAmount = ref(0);
+watch(
+  [amount, exchangeRate],
+  ([newAmount, exchangeRate]) => {
+    gsap.to(tweenedExchangedAmount, {
+      value: newAmount * exchangeRate,
+      duration: 0.5,
+    });
+  },
+  { immediate: true },
+);
+
+const formattedResultExchange = computed(() => {
   if (!exchangeRate.value || !selectedToCurrency.value) return '';
 
-  return `${formatNumber(amount.value * exchangeRate.value ?? 1, selectedToCurrency.value)} ${selectedToCurrency.value}`;
+  return `${formatNumber(tweenedExchangedAmount.value ?? 1, selectedToCurrency.value)} ${selectedToCurrency.value}`;
 });
 
 onMounted(async () => {
@@ -98,8 +128,8 @@ function formatNumber(amount: number, currencyCode: string) {
     </div>
 
     <div class="currency-converter__result">
-      <div class="currency-converter__result-from">{{ resultFromCurrency }}</div>
-      <div class="currency-converter__result-to">{{ resultToCurrency }}</div>
+      <div class="currency-converter__result-from">{{ formattedResultAmount }}</div>
+      <div class="currency-converter__result-to">{{ formattedResultExchange }}</div>
     </div>
   </div>
 </template>
