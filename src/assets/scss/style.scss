@@ -2,9 +2,13 @@
 @use './elements/link' as *;
 @use './elements/vinput' as *;
 @use './elements/vinput-group' as *;
+@use './elements/button' as *;
 
 :root {
   --theme-color-accent: #7cb0ff;
+  --theme-color-accent-hover: rgb(156 191 243);
+  --theme-color-error: #ff6e6e;
+  --theme-color-error-hover: #f18e8e;
   --theme-input-color: #a0a0a0;
   --theme-focus-input-color: #fff;
   --vinput-label-margin-bottom: 8px;
